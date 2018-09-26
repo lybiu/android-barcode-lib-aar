@@ -23,10 +23,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.dynamsoft.barcode.Barcode;
 import com.dynamsoft.barcode.BarcodeReader;
-import com.dynamsoft.barcode.FinishCallback;
-import com.dynamsoft.barcode.ReadResult;
+import com.dynamsoft.barcode.BarcodeReaderException;
+import com.dynamsoft.barcode.EnumBarcodeFormat;
+import com.dynamsoft.barcode.EnumImagePixelFormat;
+import com.dynamsoft.barcode.TextResult;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,7 +58,11 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         }
 
         mPreview = (FrameLayout) findViewById(R.id.camera_preview);
-        mBarcodeReader = new BarcodeReader("B8C43F629FA3E1FC5061032F91861EFA");
+        try {
+            mBarcodeReader = new BarcodeReader("t0068MgAAAEMKwCG/nGtAHejYbWgJH1sqDrUEhjbY2iIPP+rd//VnS2xWkcqSLMF3cxKetujwrYi4MxyyYl2qim4I1KKY3tk=");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         mFlashImageView = (ImageView)findViewById(R.id.ivFlash);
         mFlashTextView = (TextView)findViewById(R.id.tvFlash);
         mRectLayer = (RectLayer)findViewById(R.id.rectLayer);
@@ -77,7 +82,7 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     private CameraPreview mSurfaceHolder = null;
     private Camera mCamera = null;
     private BarcodeReader mBarcodeReader;
-    private long mBarcodeFormat = Barcode.OneD | Barcode.QR_CODE | Barcode.PDF417 |Barcode.DATAMATRIX;
+    private long mBarcodeFormat = EnumBarcodeFormat.BF_OneD | EnumBarcodeFormat.BF_QR_CODE | EnumBarcodeFormat.BF_PDF417 | EnumBarcodeFormat.BF_DATAMATRIX;
     private ImageView mFlashImageView;
     private TextView mFlashTextView;
     private RectLayer mRectLayer;
@@ -231,16 +236,16 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case READ_RESULT:
-                    ReadResult result = (ReadResult)msg.obj;
+                    TextResult[] result = (TextResult[])msg.obj;
                     TextView view = (TextView) findViewById(R.id.textView);
                     //long lTime = (SystemClock.currentThreadTimeMillis() - mStartTime);
                     long lTime = new Date().getTime()-mStartTime;
-                    Barcode barcode = result.barcodes == null ? null : result.barcodes[0];
-                    if (barcode != null) {
+                    if (result != null && result.length>0) {
+                    TextResult barcode = result[0];
                         if (mIsIntent) {
                             Intent data = new Intent();
-                            data.putExtra("SCAN_RESULT", barcode.displayValue);
-                            data.putExtra("SCAN_RESULT_FORMAT", barcode.formatString);
+                            data.putExtra("SCAN_RESULT", barcode.barcodeText);
+                            //data.putExtra("SCAN_RESULT_FORMAT", barcode.barcodeFormat);
                             DBR.this.setResult(DBR.RESULT_OK, data);
                             DBR.this.finish();
                             return;
@@ -257,26 +262,21 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         });
                         int y = Integer.MIN_VALUE;
                         //rotate cornerPoints by 90, NewLeft = H - Ymax, NewTop = Left, NewWidth = Height, NewHeight = Width
-                        for (Point vertex : barcode.cornerPoints) {
+                        for (com.dynamsoft.barcode.Point vertex : barcode.localizationResult.resultPoints) {
                             if (y < vertex.y)
                                 y = vertex.y;
                         }
-                        int left = barcode.boundingBox.left;
-                        int width = barcode.boundingBox.width();
-                        int height = barcode.boundingBox.height();
-                        barcode.boundingBox.left = mImageHeight - y;
-                        barcode.boundingBox.top = left;
-                        barcode.boundingBox.right = height + barcode.boundingBox.left;
-                        barcode.boundingBox.bottom = width + barcode.boundingBox.top;
+
                         builder.setMessage(barcode).setExtraInfo(lTime/1000f + "");
                         CustomDialog dialog = builder.create(R.layout.result, R.style.ResultDialog);
                         dialog.getWindow().setLayout(mRectLayer.getWidth() * 10 / 12, (mRectLayer.getHeight() >> 1) + 16);
                         dialog.show();
                         mIsDialogShowing = true;
-                    } else {
-                        if (result.errorCode != BarcodeReader.DBR_OK)
-                            Log.i(TAG, "Error:" + result.errorString);
                     }
+//                    else {
+//                        if (result.errorCode != BarcodeReader.DBR_OK)
+//                            Log.i(TAG, "Error:" + result.errorString);
+//                    }
                     mFinished = true;
                     break;
                 case OPEN_CAMERA:
@@ -324,13 +324,13 @@ public class DBR extends Activity implements Camera.PreviewCallback {
             mStartTime = new Date().getTime();
             Camera.Size size = camera.getParameters().getPreviewSize();
             mImageHeight = size.height;
-            mBarcodeReader.readSingleAsync(data, size.width, size.height, mBarcodeFormat, new FinishCallback() {
-                @Override
-                public void onFinish(ReadResult readResult) {
-                    Message message = handler.obtainMessage(READ_RESULT, readResult);
-                    message.sendToTarget();
-                }
-            });
+            try {
+                TextResult[] readResult = mBarcodeReader.decodeBuffer(data, size.width, size.height, size.width, EnumImagePixelFormat.IPF_NV21, "");
+                Message message = handler.obtainMessage(READ_RESULT, readResult);
+                message.sendToTarget();
+            }catch (BarcodeReaderException e){
+                e.printStackTrace();
+            }
         }
     }
 }

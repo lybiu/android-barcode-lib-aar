@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 
-import com.dynamsoft.barcode.Barcode;
+import com.dynamsoft.barcode.TextResult;
 
 public class CustomDialog extends Dialog {
 
@@ -38,7 +38,7 @@ public class CustomDialog extends Dialog {
         private String title;
         private String message;
         private Spanned spanned;
-        private Barcode barcode;
+        private TextResult barcode;
         private String extraInfo;
         private String positiveButtonText;
         private String negativeButtonText;
@@ -60,7 +60,7 @@ public class CustomDialog extends Dialog {
             return this;
         }
 
-        public Builder setMessage(Barcode barcode) {
+        public Builder setMessage(TextResult barcode) {
             this.barcode = barcode;
             return this;
         }
@@ -210,9 +210,14 @@ public class CustomDialog extends Dialog {
 //                if (barcode.boundingBox != null)
 //                    tvBarcodeRegion.setText("{Left: " + barcode.boundingBox.left + ", Top: " + barcode.boundingBox.top + ", Width: " + barcode.boundingBox.width() + ", Height: " + barcode.boundingBox.height());
                 TextView messageView = ((TextView) layout.findViewById(R.id.message));
-                messageView.setText("Type: " + barcode.formatString + "\r\nValue: " + barcode.displayValue +
-                        "\r\nRegion: {Left: " + barcode.boundingBox.left + ", Top: " + barcode.boundingBox.top + ", Width: " + barcode.boundingBox.width() + ", Height: " + barcode.boundingBox.height() + "}");
-               if (extraInfo != null) {
+                messageView.setText("Type: " + barcode.barcodeFormat + "\r\nValue: " + barcode.barcodeText +
+                        "\r\nRegion: \r\n{Point[1]: (" + barcode.localizationResult.resultPoints[0].x + "," + barcode.localizationResult.resultPoints[0].y + "), " +
+                        "\r\nPoint[2]: (" + barcode.localizationResult.resultPoints[1].x + "," + barcode.localizationResult.resultPoints[1].y + "), " +
+                        "\r\nPoint[3]: (" + barcode.localizationResult.resultPoints[2].x + "," + barcode.localizationResult.resultPoints[2].y + "), " +
+                        "\r\nPoint[4]: (" + barcode.localizationResult.resultPoints[3].x + "," + barcode.localizationResult.resultPoints[3].y + "), " +"}");
+                messageView.setText("Type: " + barcode.barcodeFormat + "\r\nValue: " + barcode.barcodeText + "}");
+
+                if (extraInfo != null) {
                    TextView tvTime = (TextView)layout.findViewById(R.id.tvTime);
                    tvTime.setText(extraInfo + " seconds");
                }
