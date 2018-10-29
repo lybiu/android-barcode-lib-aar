@@ -11,10 +11,12 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
-
 allprojects {
     repositories {
         jcenter()
+        maven {
+            url "http://download.dynamsoft.com/maven/dbr/aar"
+        }
     }
 }
 
