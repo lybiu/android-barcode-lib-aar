@@ -245,7 +245,7 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         if (mIsIntent) {
                             Intent data = new Intent();
                             data.putExtra("SCAN_RESULT", barcode.barcodeText);
-                            //data.putExtra("SCAN_RESULT_FORMAT", barcode.barcodeFormat);
+                            data.putExtra("SCAN_RESULT_FORMAT", barcode.barcodeFormatString);
                             DBR.this.setResult(DBR.RESULT_OK, data);
                             DBR.this.finish();
                             return;
