@@ -22,12 +22,17 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dynamsoft.barcode.BarcodeReader;
 import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
 import com.dynamsoft.barcode.TextResult;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,6 +43,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DBR extends Activity implements Camera.PreviewCallback {
     public static String TAG = "DBRDemo";
+    private String mStrLicense;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +64,14 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         }
 
         mPreview = (FrameLayout) findViewById(R.id.camera_preview);
+        mStrLicense = getIntent().getStringExtra("barcodeLicense");
+        Log.i("mStrLicense", mStrLicense);
         try {
-            mBarcodeReader = new BarcodeReader("t0068MgAAAEMKwCG/nGtAHejYbWgJH1sqDrUEhjbY2iIPP+rd//VnS2xWkcqSLMF3cxKetujwrYi4MxyyYl2qim4I1KKY3tk=");
+            mBarcodeReader = new BarcodeReader(mStrLicense);
+            String strLicenseKey = getIntent().getStringExtra("barcodeLicenseKey");
+            if(strLicenseKey !=null){
+                mBarcodeReader.initLicenseFromServer("",strLicenseKey);
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -74,6 +86,8 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         if (intent.getAction().equals("com.dynamsoft.dbr")) {
             mIsIntent = true;
         }
+
+
     }
 
     static final int PERMISSIONS_REQUEST_CAMERA = 473;
@@ -228,7 +242,6 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     private final static int READ_RESULT = 1;
     private final static int OPEN_CAMERA = 2;
     private final static int RELEASE_CAMERA = 3;
-    private int mImageHeight = 0;
     private boolean mIsIntent = false;
 
     Handler handler = new Handler(Looper.getMainLooper()) {
@@ -246,6 +259,8 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                             Intent data = new Intent();
                             data.putExtra("SCAN_RESULT", barcode.barcodeText);
                             data.putExtra("SCAN_RESULT_FORMAT", barcode.barcodeFormatString);
+
+                            data.putExtra("FROMJS", mStrLicense);
                             DBR.this.setResult(DBR.RESULT_OK, data);
                             DBR.this.finish();
                             return;
@@ -323,7 +338,6 @@ public class DBR extends Activity implements Camera.PreviewCallback {
             //mStartTime = SystemClock.currentThreadTimeMillis();
             mStartTime = new Date().getTime();
             Camera.Size size = camera.getParameters().getPreviewSize();
-            mImageHeight = size.height;
             try {
                 TextResult[] readResult = mBarcodeReader.decodeBuffer(data, size.width, size.height, size.width, EnumImagePixelFormat.IPF_NV21, "");
                 Message message = handler.obtainMessage(READ_RESULT, readResult);
