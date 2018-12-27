@@ -39,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DBR extends Activity implements Camera.PreviewCallback {
@@ -62,7 +63,6 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         new String[]{Manifest.permission.CAMERA}, PERMISSIONS_REQUEST_CAMERA);
             }
         }
-
         mPreview = (FrameLayout) findViewById(R.id.camera_preview);
         mStrLicense = getIntent().getStringExtra("barcodeLicense");
         Log.i("mStrLicense", mStrLicense);
@@ -195,7 +195,12 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                 if (mCamera != null) {
                     mCamera.setDisplayOrientation(90);
                     Camera.Parameters cameraParameters = mCamera.getParameters();
-                    cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                    List<String> supportList= cameraParameters.getSupportedFocusModes();
+                    if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
+                        cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                    else if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
+                            cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+
                     mCamera.setParameters(cameraParameters);
                 }
 
