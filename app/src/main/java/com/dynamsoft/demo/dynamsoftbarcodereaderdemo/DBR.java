@@ -29,6 +29,7 @@ import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
 import com.dynamsoft.barcode.TextResult;
+import com.dynamsoft.barcode.DBRServerLicenseVerificationListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
