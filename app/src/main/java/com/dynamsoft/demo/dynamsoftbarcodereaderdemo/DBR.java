@@ -70,7 +70,13 @@ public class DBR extends Activity implements Camera.PreviewCallback {
             mBarcodeReader = new BarcodeReader(mStrLicense);
             String strLicenseKey = getIntent().getStringExtra("barcodeLicenseKey");
             if(strLicenseKey !=null){
-                mBarcodeReader.initLicenseFromServer("",strLicenseKey);
+                mBarcodeReader.initLicenseFromServer("",strLicenseKey,
+                    new DBRServerLicenseVerificationListener() {
+                        @Override
+                        public void licenseVerificationCallback(boolean isSuccess, Exception error) {
+                            Log.e("isSuccess", String.valueOf(isSuccess));
+                        }
+                    });
             }
         }catch (Exception e){
             e.printStackTrace();
