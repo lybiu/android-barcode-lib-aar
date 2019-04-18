@@ -74,7 +74,9 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                     new DBRServerLicenseVerificationListener() {
                         @Override
                         public void licenseVerificationCallback(boolean isSuccess, Exception error) {
-                            Log.e("isSuccess", String.valueOf(isSuccess));
+                            if (!isSuccess) {
+			                    Log.i(TAG, "DBR license verify failed due to " + error.getMessage());
+		                    }
                         }
                     });
             }
