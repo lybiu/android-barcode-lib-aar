@@ -29,6 +29,7 @@ import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
 import com.dynamsoft.barcode.TextResult;
+import com.dynamsoft.barcode.DBRServerLicenseVerificationListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,13 +67,15 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         mPreview = (FrameLayout) findViewById(R.id.camera_preview);
         mStrLicense = getIntent().getStringExtra("barcodeLicense");
         Log.i("mStrLicense", mStrLicense);
-        try {
+	      try {
             mBarcodeReader = new BarcodeReader();
         } catch (BarcodeReaderException e) {
             e.printStackTrace();
         }
         try {
+            mBarcodeReader.initLicense(mStrLicense);
             String strLicenseKey = getIntent().getStringExtra("barcodeLicenseKey");
+            Log.i("strLicenseKey", strLicenseKey);
             if(strLicenseKey !=null){
                 mBarcodeReader.initLicenseFromServer("",strLicenseKey, new DBRServerLicenseVerificationListener() {
                     @Override
