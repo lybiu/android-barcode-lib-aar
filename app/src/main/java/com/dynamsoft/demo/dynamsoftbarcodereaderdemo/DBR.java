@@ -110,7 +110,7 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     private CameraPreview mSurfaceHolder = null;
     private Camera mCamera = null;
     private BarcodeReader mBarcodeReader;
-    private long mBarcodeFormat = EnumBarcodeFormat.BF_OneD | EnumBarcodeFormat.BF_QR_CODE | EnumBarcodeFormat.BF_PDF417 | EnumBarcodeFormat.BF_DATAMATRIX;
+    private long mBarcodeFormat = EnumBarcodeFormat.BF_ONED | EnumBarcodeFormat.BF_QR_CODE | EnumBarcodeFormat.BF_PDF417 | EnumBarcodeFormat.BF_DATAMATRIX;
     private ImageView mFlashImageView;
     private TextView mFlashTextView;
     private RectLayer mRectLayer;
