@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
@@ -22,18 +21,15 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.dynamsoft.barcode.BarcodeReader;
 import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
+import com.dynamsoft.barcode.EnumBarcodeFormat_2;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
+import com.dynamsoft.barcode.PublicRuntimeSettings;
 import com.dynamsoft.barcode.TextResult;
 import com.dynamsoft.barcode.DBRServerLicenseVerificationListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -64,7 +60,7 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         new String[]{Manifest.permission.CAMERA}, PERMISSIONS_REQUEST_CAMERA);
             }
         }
-        mPreview = (FrameLayout) findViewById(R.id.camera_preview);
+        mPreview = findViewById(R.id.camera_preview);
         mStrLicense = getIntent().getStringExtra("barcodeLicense");
         Log.i("mStrLicense", mStrLicense);
 	      try {
@@ -89,9 +85,9 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         }catch (Exception e){
             e.printStackTrace();
         }
-        mFlashImageView = (ImageView)findViewById(R.id.ivFlash);
-        mFlashTextView = (TextView)findViewById(R.id.tvFlash);
-        mRectLayer = (RectLayer)findViewById(R.id.rectLayer);
+        mFlashImageView = findViewById(R.id.ivFlash);
+        mFlashTextView = findViewById(R.id.tvFlash);
+        mRectLayer = findViewById(R.id.rectLayer);
 
         mSurfaceHolder = new CameraPreview(DBR.this);
         mPreview.addView(mSurfaceHolder);
@@ -100,8 +96,6 @@ public class DBR extends Activity implements Camera.PreviewCallback {
         if (intent.getAction().equals("com.dynamsoft.dbr")) {
             mIsIntent = true;
         }
-
-
     }
 
     static final int PERMISSIONS_REQUEST_CAMERA = 473;
@@ -121,10 +115,11 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     @Override protected void onResume() {
         super.onResume();
         waitForRelease();
-        if (mCamera == null)
+        if (mCamera == null) {
             openCamera();
-        else
+        } else {
             mCamera.startPreview();
+        }
     }
 
     @Override protected void onPause() {
@@ -192,12 +187,14 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     private static Camera getCameraInstance(){
         Camera c = null;
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            c = Camera.open();
+            // attempt to get a Camera instance
         }
         catch (Exception e){
             Log.i(TAG, "Camera is not available (in use or does not exist)");
         }
-        return c; // returns null if camera is unavailable
+        return c;
+        // returns null if camera is unavailable
     }
 
     private void openCamera()
@@ -210,10 +207,11 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                     mCamera.setDisplayOrientation(90);
                     Camera.Parameters cameraParameters = mCamera.getParameters();
                     List<String> supportList= cameraParameters.getSupportedFocusModes();
-                    if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
+                    if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
                         cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                    else if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO))
-                            cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                    } else if(supportList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                        cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                    }
 
                     mCamera.setParameters(cameraParameters);
                 }
@@ -269,20 +267,23 @@ public class DBR extends Activity implements Camera.PreviewCallback {
             switch (msg.what) {
                 case READ_RESULT:
                     TextResult[] result = (TextResult[])msg.obj;
-                    TextView view = (TextView) findViewById(R.id.textView);
+                    TextView view = findViewById(R.id.textView);
                     //long lTime = (SystemClock.currentThreadTimeMillis() - mStartTime);
                     long lTime = new Date().getTime()-mStartTime;
                     if (result != null && result.length>0) {
-                    TextResult barcode = result[0];
-		    String msgText = "";
-		    for(int i=0;i<result.length;i++){
-		    	msgText = msgText + "\nResult: " + result[i].barcodeText + "\nFormat: "+ result[i].barcodeFormatString + "\n";
-		    }
+                        TextResult barcode = result[0];
+                        String msgText = "";
+                        for(int i = 0; i<result.length ;i++){
+                            if (result[i].barcodeFormat_2 != 0){
+                                msgText = msgText + "\nResult: " + result[i].barcodeText + "\nFormat: "+ result[i].barcodeFormatString_2 + "\n";
+                            }else {
+                                msgText = msgText + "\nResult: " + result[i].barcodeText + "\nFormat: "+ result[i].barcodeFormatString + "\n";
+                            }
+                        }
                         if (mIsIntent) {
                             Intent data = new Intent();
                             data.putExtra("SCAN_RESULT", msgText);
                             data.putExtra("SCAN_RESULT_FORMAT", "");
-
                             data.putExtra("FROMJS", mStrLicense);
                             DBR.this.setResult(DBR.RESULT_OK, data);
                             DBR.this.finish();
@@ -301,8 +302,9 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         int y = Integer.MIN_VALUE;
                         //rotate cornerPoints by 90, NewLeft = H - Ymax, NewTop = Left, NewWidth = Height, NewHeight = Width
                         for (com.dynamsoft.barcode.Point vertex : barcode.localizationResult.resultPoints) {
-                            if (y < vertex.y)
+                            if (y < vertex.y) {
                                 y = vertex.y;
+                            }
                         }
 
                         builder.setMessage(barcode).setExtraInfo(lTime/1000f + "");
@@ -311,10 +313,6 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         dialog.show();
                         mIsDialogShowing = true;
                     }
-//                    else {
-//                        if (result.errorCode != BarcodeReader.DBR_OK)
-//                            Log.i(TAG, "Error:" + result.errorString);
-//                    }
                     mFinished = true;
                     break;
                 case OPEN_CAMERA:
@@ -322,8 +320,9 @@ public class DBR extends Activity implements Camera.PreviewCallback {
                         mCamera.setPreviewCallback(DBR.this);
                         mSurfaceHolder.setCamera(mCamera);
                         Camera.Parameters p = mCamera.getParameters();
-                        if (mFlashTextView.getText().equals("Flash on"))
+                        if (mFlashTextView.getText().equals("Flash on")) {
                             p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                        }
                         mCamera.setParameters(p);
                         mSurfaceHolder.startPreview();
                     }
@@ -341,16 +340,12 @@ public class DBR extends Activity implements Camera.PreviewCallback {
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (isFirstTime) {
             isFirstTime = false;
-            Log.i("xiao", "width: " + camera.getParameters().getPreviewSize().width + ", height: " + camera.getParameters().getPreviewSize().height);
             try {
                 File file = new File(Environment.getExternalStorageDirectory() + "/tmp.yuv");
-                Log.i("xiao", "path: " + file.getAbsolutePath());
                 FileOutputStream output = new FileOutputStream(file);
                 output.write(data);
                 output.flush();
                 output.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -361,6 +356,14 @@ public class DBR extends Activity implements Camera.PreviewCallback {
             //mStartTime = SystemClock.currentThreadTimeMillis();
             mStartTime = new Date().getTime();
             Camera.Size size = camera.getParameters().getPreviewSize();
+            PublicRuntimeSettings settings;
+            try {
+                settings = mBarcodeReader.getRuntimeSettings();
+                settings.barcodeFormatIds_2 = EnumBarcodeFormat_2.BF2_POSTALCODE | EnumBarcodeFormat_2.BF2_NONSTANDARD_BARCODE;
+                mBarcodeReader.updateRuntimeSettings(settings);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             try {
                 TextResult[] readResult = mBarcodeReader.decodeBuffer(data, size.width, size.height, size.width, EnumImagePixelFormat.IPF_NV21, "");
                 Message message = handler.obtainMessage(READ_RESULT, readResult);
